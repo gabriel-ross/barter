@@ -11,6 +11,5 @@ COPY . .
 RUN mkdir -p bin
 RUN go build -o ./bin/server ./cmd/server.go
 
-ENV PORT=8080
 EXPOSE ${PORT}
 CMD ./bin/server

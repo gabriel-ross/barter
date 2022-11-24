@@ -70,7 +70,7 @@ func List[T any](ctx context.Context, client *firestore.Client, collectionPath s
 	iter := query.Documents(ctx)
 	for {
 		dsnap, done := iter.Next()
-		if done == iterator.Done {
+		if done == iterator.Done || dsnap == nil {
 			break
 		}
 		var data T
@@ -134,12 +134,12 @@ func BuildListQueryFromListOptions(query firestore.Query, options ...ListOption)
 	// 	query = query.OrderBy(sortParam.key, sortParam.direction)
 	// }
 
-	if opts.offset > -1 {
-		query = query.StartAt(opts.offset)
-	}
-	if opts.limit > -1 {
-		query = query.Limit(opts.limit)
-	}
+	// if opts.offset > -1 {
+	// 	query = query.StartAt(opts.offset)
+	// }
+	// if opts.limit > -1 {
+	// 	query = query.Limit(opts.limit)
+	// }
 
 	return query
 }
