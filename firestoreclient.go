@@ -120,43 +120,50 @@ type operator string
 // TODO: Enable and get working adding sort keys, offset, and limiting.
 // TODO: Error on limitations that a sort key can only follow a filter on the same key
 // or something like that
+// TODO: sorting, filtering, limiting shouldn't be allowed on eq queries
 func BuildListQueryFromListOptions(query firestore.Query, options ...ListOption) firestore.Query {
 
-	opts := newListOptions(options...)
+	if len(options) > 0 {
+		opts := newListOptions(options...)
 
-	// Add filter params
-	for _, filterParam := range opts.filterParameters {
-		query = query.Where(filterParam.key, string(filterParam.op), filterParam.val)
+		// Add filter params
+		for _, filterParam := range opts.filterParameters {
+			query = query.Where(filterParam.key, string(filterParam.op), filterParam.val)
+		}
+
+		// Add sort keys
+		if len(opts.sortParameters) == 0 && (opts.offset > -1 || opts.limit > -1) {
+			query = query.OrderBy("id", firestore.Asc)
+		} else {
+			for _, sortParam := range opts.sortParameters {
+				query = query.OrderBy(sortParam.key, sortParam.direction)
+			}
+		}
+
+		if opts.offset > -1 {
+			query = query.StartAt(opts.offset)
+		}
+		if opts.limit > -1 {
+			query = query.Limit(opts.limit)
+		}
 	}
-
-	// Add sort keys
-	// for _, sortParam := range opts.sortParameters {
-	// 	query = query.OrderBy(sortParam.key, sortParam.direction)
-	// }
-
-	// if opts.offset > -1 {
-	// 	query = query.StartAt(opts.offset)
-	// }
-	// if opts.limit > -1 {
-	// 	query = query.Limit(opts.limit)
-	// }
 
 	return query
 }
 
 // See https://cloud.google.com/firestore/docs/query-data/order-limit-data
 // for limitations on filtering and ordering data
-type ListOption func(*ListOptions)
+type ListOption func(*listOptions)
 
-type ListOptions struct {
+type listOptions struct {
 	limit            int
 	offset           int
 	sortParameters   []sortParameter
 	filterParameters []filterParameter
 }
 
-func newListOptions(opts ...ListOption) *ListOptions {
-	lo := &ListOptions{
+func newListOptions(opts ...ListOption) *listOptions {
+	lo := &listOptions{
 		limit:            100,
 		offset:           0,
 		sortParameters:   []sortParameter{},
@@ -169,13 +176,13 @@ func newListOptions(opts ...ListOption) *ListOptions {
 }
 
 func WithLimit(limit int) ListOption {
-	return func(l *ListOptions) {
+	return func(l *listOptions) {
 		l.limit = limit
 	}
 }
 
 func WithOffset(offset int) ListOption {
-	return func(l *ListOptions) {
+	return func(l *listOptions) {
 		l.offset = offset
 	}
 }
@@ -183,7 +190,7 @@ func WithOffset(offset int) ListOption {
 // WithSortKey adds a sort key to the sort chain. Sort keys will be applied in
 // the order they are added. Max of two sort keys - any more will be ignored.
 func WithSortKey(key string, direction firestore.Direction) ListOption {
-	return func(l *ListOptions) {
+	return func(l *listOptions) {
 		if len(l.sortParameters) < 2 {
 			l.sortParameters = append(l.sortParameters, sortParameter{
 				key:       key,
@@ -196,8 +203,8 @@ func WithSortKey(key string, direction firestore.Direction) ListOption {
 // WithQuery adds a filter query to the query chain. Calling this multiple times
 // adds additional filter queries to the chain rather than overwriting previous
 // filters.
-func WithFilterQuery(key string, op operator, val interface{}) func(*ListOptions) {
-	return func(l *ListOptions) {
+func WithFilterQuery(key string, op operator, val interface{}) func(*listOptions) {
+	return func(l *listOptions) {
 		l.filterParameters = append(l.filterParameters, filterParameter{
 			key: key,
 			op:  op,

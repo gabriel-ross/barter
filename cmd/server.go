@@ -31,8 +31,12 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Get("/", index)
-	r.Post("/tests", create(ctx, db, "tests"))
+	r.Post("/tests/{foo}", create(ctx, db, "tests"))
 	r.Get("/tests", list(ctx, db, "tests"))
+	r.Get("/tests/nofilter", listNoFilter(ctx, db, "tests"))
+	r.Get("/tests/filteroffsetlimit", listLimitOffset(ctx, db, "tests"))
+	r.Get("/tests/filter/{foo}", listFilter(ctx, db, "tests"))
+	r.Get("/tests/filterall/{foo}", listFilterAll(ctx, db, "tests"))
 	http.ListenAndServe(PORT, r)
 }
 
@@ -44,7 +48,8 @@ func create(ctx context.Context, db *firestore.Client, collectionPath string) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := db.Collection(collectionPath).NewDoc().ID
 		data := map[string]interface{}{
-			"id": id,
+			"id":  id,
+			"foo": chi.URLParam(r, "foo"),
 		}
 		_, err := db.Collection(collectionPath).Doc(id).Set(ctx, data)
 		if err != nil {
@@ -75,6 +80,74 @@ func list(ctx context.Context, db *firestore.Client, collectionPath string) http
 			var data map[string]interface{}
 			dsnap.DataTo(&data)
 			resp = append(resp, data)
+		}
+		bytes, err := json.Marshal(resp)
+		if err != nil {
+			w.Write([]byte("error marshaling list: " + err.Error()))
+			return
+		}
+		w.Write(bytes)
+		return
+	}
+}
+
+func listNoFilter(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath)
+		if err != nil {
+			w.Write([]byte("error retrieving data: " + err.Error()))
+			return
+		}
+		bytes, err := json.Marshal(resp)
+		if err != nil {
+			w.Write([]byte("error marshaling list: " + err.Error()))
+			return
+		}
+		w.Write(bytes)
+		return
+	}
+}
+
+func listFilter(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath, barter.WithFilterQuery("foo", barter.Eq, chi.URLParam(r, "foo")))
+		if err != nil {
+			w.Write([]byte("error retrieving data: " + err.Error()))
+			return
+		}
+		bytes, err := json.Marshal(resp)
+		if err != nil {
+			w.Write([]byte("error marshaling list: " + err.Error()))
+			return
+		}
+		w.Write(bytes)
+		return
+	}
+}
+
+func listFilterAll(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath, barter.WithFilterQuery("foo", barter.Eq, chi.URLParam(r, "foo")), barter.WithLimit(2), barter.WithOffset(1))
+		if err != nil {
+			w.Write([]byte("error retrieving data: " + err.Error()))
+			return
+		}
+		bytes, err := json.Marshal(resp)
+		if err != nil {
+			w.Write([]byte("error marshaling list: " + err.Error()))
+			return
+		}
+		w.Write(bytes)
+		return
+	}
+}
+
+func listLimitOffset(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath, barter.WithLimit(2), barter.WithOffset(1))
+		if err != nil {
+			w.Write([]byte("error retrieving data: " + err.Error()))
+			return
 		}
 		bytes, err := json.Marshal(resp)
 		if err != nil {

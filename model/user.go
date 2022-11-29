@@ -1,9 +1,9 @@
 package model
 
 type User struct {
-	ID          string
-	Name        string
-	Email       string
-	PhoneNumber string
-	Token       string
+	ID          string `firestore:"id"`
+	Name        string `firestore:"name"`
+	Email       string `firestore:"email"`
+	PhoneNumber string `firestore:"phoneNumber"`
+	Token       string `firestore:"token"`
 }
