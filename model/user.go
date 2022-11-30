@@ -5,7 +5,6 @@ type User struct {
 	Name        string `firestore:"name"`
 	Email       string `firestore:"email"`
 	PhoneNumber string `firestore:"phoneNumber"`
-	Token       string `firestore:"token"`
 }
 
 func NewUser() User {
@@ -14,6 +13,5 @@ func NewUser() User {
 		Name:        "",
 		Email:       "",
 		PhoneNumber: "",
-		Token:       "",
 	}
 }

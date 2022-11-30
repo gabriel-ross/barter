@@ -2,177 +2,85 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter"
+	"github.com/gabriel-ross/barter/account"
+	"github.com/gabriel-ross/barter/auth"
+	"github.com/gabriel-ross/barter/transaction"
+	"github.com/gabriel-ross/barter/user"
 	"github.com/go-chi/chi"
-	"google.golang.org/api/iterator"
+	"github.com/joho/godotenv"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
+var APPLICATION_URL string
 var PROJECT_ID string
 var PORT string
-
-type demo struct {
-	id string
-}
+var CLIENT_ID string
+var CLIENT_SECRET string
+var TOKEN_REDIRECT_URL string
 
 func main() {
-	ctx := context.TODO()
+	var err error
 	LoadConfigFromEnvironment()
-	db, err := barter.NewFirestoreClient(ctx, PROJECT_ID)
-	if err != nil {
-		log.Fatal("error connecting to database: ", err)
-	}
-	defer db.Close()
+	ctx := context.TODO()
 
+	// Instantiate dependencies
 	r := chi.NewRouter()
-	r.Get("/", index)
-	r.Post("/tests/{foo}", create(ctx, db, "tests"))
-	r.Get("/tests", list(ctx, db, "tests"))
-	r.Get("/tests/nofilter", listNoFilter(ctx, db, "tests"))
-	r.Get("/tests/filteroffsetlimit", listLimitOffset(ctx, db, "tests"))
-	r.Get("/tests/filter/{foo}", listFilter(ctx, db, "tests"))
-	r.Get("/tests/filterall/{foo}", listFilterAll(ctx, db, "tests"))
+	fsClient, err := firestore.NewClient(ctx, PROJECT_ID)
+	if err != nil {
+		log.Fatalf("Failed to create client: %s", err)
+	}
+	defer fsClient.Close()
+
+	oauth2Config := &oauth2.Config{
+		ClientID:     CLIENT_ID,
+		ClientSecret: CLIENT_SECRET,
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{"openid"},
+		RedirectURL:  fmt.Sprintf("%s/auth/token", APPLICATION_URL),
+	}
+
+	// Mount index page
+	r.Get("/", index())
+
+	// Instantiate and mount services
+	auth.New(r, fsClient, oauth2Config, APPLICATION_URL, "auth")
+	user.New(r, fsClient, APPLICATION_URL, "users")
+	transaction.New(r, fsClient, APPLICATION_URL, "transactions")
+	account.New(r, fsClient, APPLICATION_URL, "accounts")
+
 	http.ListenAndServe(PORT, r)
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("POST /tests create\nGET /tests list"))
-}
-
-func create(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := db.Collection(collectionPath).NewDoc().ID
-		data := map[string]interface{}{
-			"id":  id,
-			"foo": chi.URLParam(r, "foo"),
-		}
-		_, err := db.Collection(collectionPath).Doc(id).Set(ctx, data)
-		if err != nil {
-			w.Write([]byte("error storing data: " + err.Error()))
-			return
-		}
-
-		bytes, err := json.Marshal(data)
-		if err != nil {
-			w.Write([]byte("error marshaling response: " + err.Error()))
-			return
-		}
-		w.Write(bytes)
-		return
-	}
-}
-
-func list(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		iter := db.Collection(collectionPath).Documents(ctx)
-		resp := []map[string]interface{}{}
-		for {
-			dsnap, err := iter.Next()
-			if err == iterator.Done {
-				break
-			}
-
-			var data map[string]interface{}
-			dsnap.DataTo(&data)
-			resp = append(resp, data)
-		}
-		bytes, err := json.Marshal(resp)
-		if err != nil {
-			w.Write([]byte("error marshaling list: " + err.Error()))
-			return
-		}
-		w.Write(bytes)
-		return
-	}
-}
-
-func listNoFilter(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath)
-		if err != nil {
-			w.Write([]byte("error retrieving data: " + err.Error()))
-			return
-		}
-		bytes, err := json.Marshal(resp)
-		if err != nil {
-			w.Write([]byte("error marshaling list: " + err.Error()))
-			return
-		}
-		w.Write(bytes)
-		return
-	}
-}
-
-func listFilter(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath, barter.WithFilterQuery("foo", barter.Eq, chi.URLParam(r, "foo")))
-		if err != nil {
-			w.Write([]byte("error retrieving data: " + err.Error()))
-			return
-		}
-		bytes, err := json.Marshal(resp)
-		if err != nil {
-			w.Write([]byte("error marshaling list: " + err.Error()))
-			return
-		}
-		w.Write(bytes)
-		return
-	}
-}
-
-func listFilterAll(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath, barter.WithFilterQuery("foo", barter.Eq, chi.URLParam(r, "foo")), barter.WithLimit(2), barter.WithOffset(1))
-		if err != nil {
-			w.Write([]byte("error retrieving data: " + err.Error()))
-			return
-		}
-		bytes, err := json.Marshal(resp)
-		if err != nil {
-			w.Write([]byte("error marshaling list: " + err.Error()))
-			return
-		}
-		w.Write(bytes)
-		return
-	}
-}
-
-func listLimitOffset(ctx context.Context, db *firestore.Client, collectionPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := barter.List[map[string]interface{}](ctx, db, collectionPath, barter.WithLimit(2), barter.WithOffset(1))
-		if err != nil {
-			w.Write([]byte("error retrieving data: " + err.Error()))
-			return
-		}
-		bytes, err := json.Marshal(resp)
-		if err != nil {
-			w.Write([]byte("error marshaling list: " + err.Error()))
-			return
-		}
-		w.Write(bytes)
-		return
-	}
-}
-
 func LoadConfigFromEnvironment() {
-	//godotenv.Load(".env")
+	godotenv.Load(".env")
+	APPLICATION_URL = os.Getenv("APPLICATION_URL")
 	PROJECT_ID = os.Getenv("PROJECT_ID")
-	PORT = os.Getenv("PORT")
+	PORT = ":" + os.Getenv("PORT")
+	CLIENT_ID = os.Getenv("CLIENT_ID")
+	CLIENT_SECRET = os.Getenv("CLIENT_SECRET")
+	TOKEN_REDIRECT_URL = os.Getenv("TOKEN_REDIRECT_URL")
 
 	// Default value if not set
 	if PORT == "" {
-		PORT = "8080"
+		PORT = ":8080"
 	}
-
-	PORT = ":" + PORT
 }
 
 type Config struct {
 	PROJECT_ID string `env:"PROJECT_ID" required:"true" default:"-"`
 	PORT       string `env:"PORT" required:"false" default:"8080"`
+}
+
+func index() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		barter.WriteResponse(w, r, http.StatusOK, "hello world")
+	}
 }

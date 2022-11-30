@@ -21,13 +21,13 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 
 		err = BindRequest(r, &data)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusBadRequest, err)
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
 			return
 		}
 
 		resp, err := svc.create(ctx, data)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err)
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
@@ -42,18 +42,18 @@ func (svc *Service) handleList() http.HandlerFunc {
 
 		offset, limit, err := extractPaginate(r)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusBadRequest, err)
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
 			return
 		}
 		resp, err := svc.list(ctx, offset, limit)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err)
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
 		count, err := svc.count(ctx)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err)
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
@@ -90,10 +90,10 @@ func (svc *Service) handleGet() http.HandlerFunc {
 
 		resp, err := svc.read(ctx, id)
 		if status.Code(err) == codes.NotFound {
-			barter.RenderError(w, r, http.StatusNotFound, errors.New("resource not found"))
+			barter.RenderError(w, r, http.StatusNotFound, errors.New("resource not found"), "%s", err.Error())
 			return
 		} else if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err)
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
@@ -110,13 +110,13 @@ func (svc *Service) handleUpdate() http.HandlerFunc {
 
 		err = BindRequest(r, &data)
 		if err != nil {
-			w.Write([]byte("error binding: " + err.Error()))
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
 			return
 		}
 
 		resp, err := svc.update(ctx, id, data)
 		if err != nil {
-			w.Write([]byte("error creating: " + err.Error()))
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
@@ -130,20 +130,18 @@ func (svc *Service) handleDelete() http.HandlerFunc {
 		var err error
 		id := chi.URLParam(r, "id")
 
-		exists, err := svc.exists(ctx, id)
-		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err)
+		_, err = svc.read(ctx, id)
+		if status.Code(err) == codes.NotFound {
+			barter.RenderError(w, r, http.StatusNotFound, errors.New("resource not found"), "%s", err.Error())
 			return
-		}
-
-		if !exists {
-			barter.RenderError(w, r, http.StatusNotFound, errors.New("resource not found"))
+		} else if err != nil {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
 		err = svc.delete(ctx, id)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err)
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 

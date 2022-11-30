@@ -2,6 +2,7 @@ package barter
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -13,7 +14,7 @@ func WriteResponse(w http.ResponseWriter, r *http.Request, code int, data any) {
 	var err error
 	respBody, err := json.Marshal(data)
 	if err != nil {
-		RenderError(w, r, http.StatusInternalServerError, err)
+		RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 		return
 	}
 
@@ -42,9 +43,9 @@ func WriteResponse(w http.ResponseWriter, r *http.Request, code int, data any) {
 
 // func RenderList(w http.ResponseWriter, r *http.Request, code int, data []Renderer) {}
 
-func RenderError(w http.ResponseWriter, r *http.Request, code int, svrErr error) {
+func RenderError(w http.ResponseWriter, r *http.Request, code int, svrErr error, format string, args ...any) {
 	var err error
-	errResp := newErrorResponse(code, svrErr)
+	errResp := newErrorResponse(code, svrErr, format, args...)
 	respBody, err := json.Marshal(errResp)
 	if err != nil {
 		writeErrorError(w, err)
@@ -64,11 +65,11 @@ type errorResponse struct {
 	ErrorText      string `json:"error,omitempty"`
 }
 
-func newErrorResponse(code int, err error) *errorResponse {
+func newErrorResponse(code int, err error, format string, args ...any) *errorResponse {
 	return &errorResponse{
 		Err:            err,
 		HTTPStatusCode: code,
-		ErrorText:      err.Error(),
+		ErrorText:      fmt.Sprintf(format, args...),
 	}
 }
 

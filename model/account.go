@@ -6,7 +6,7 @@ type Account struct {
 	ID                string             `firestore:"id"`
 	UserID            string             `firestore:"user"`
 	Funds             map[string]float64 `firestore:"funds"`
-	TransactionVolume int                `firestore:"transactionVolume"`
+	Reputation        int                `firestore:"reputation"`
 	CreationTimestamp time.Time          `firestore:"creationTimestamp"`
 }
 
@@ -15,7 +15,7 @@ func NewAccount() Account {
 		ID:                "",
 		UserID:            "",
 		Funds:             map[string]float64{},
-		TransactionVolume: 0,
+		Reputation:        100,
 		CreationTimestamp: time.Now(),
 	}
 }

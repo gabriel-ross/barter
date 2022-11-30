@@ -28,6 +28,5 @@ func BindRequest(r *http.Request, m *model.User) (err error) {
 	m.Name = reqBody.Name
 	m.Email = reqBody.Email
 	m.PhoneNumber = reqBody.PhoneNumber
-	m.Token = r.Header.Get("Token")
 	return nil
 }

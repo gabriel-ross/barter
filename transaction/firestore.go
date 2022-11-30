@@ -80,5 +80,9 @@ func (svc *Service) updateNonZero(ctx context.Context, id string, data model.Tra
 
 func (svc *Service) delete(ctx context.Context, id string) (err error) {
 	_, err = svc.db.Collection("transactions").Doc(id).Delete(ctx)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
