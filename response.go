@@ -5,15 +5,13 @@ import (
 	"net/http"
 )
 
-// Renderer is an interface
 type Renderer interface {
-	Render(*http.Request) any
+	Render(*http.Request) error
 }
 
-func Render(w http.ResponseWriter, r *http.Request, code int, data Renderer) {
+func WriteResponse(w http.ResponseWriter, r *http.Request, code int, data any) {
 	var err error
-	respData := data.Render(r)
-	respBody, err := json.Marshal(respData)
+	respBody, err := json.Marshal(data)
 	if err != nil {
 		RenderError(w, r, http.StatusInternalServerError, err)
 		return
@@ -23,7 +21,26 @@ func Render(w http.ResponseWriter, r *http.Request, code int, data Renderer) {
 	w.Write(respBody)
 	return
 }
-func RenderList(w http.ResponseWriter, r *http.Request, code int, data []Renderer) {}
+
+// func RenderAndWrite(w http.ResponseWriter, r *http.Request, code int, data Renderer) {
+// 	var err error
+// 	err = data.Render(r)
+// 	if err != nil {
+// 		RenderError(w, r, http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	respBody, err := json.Marshal(data)
+// 	if err != nil {
+// 		RenderError(w, r, http.StatusInternalServerError, err)
+// 		return
+// 	}
+
+// 	w.WriteHeader(code)
+// 	w.Write(respBody)
+// 	return
+// }
+
+// func RenderList(w http.ResponseWriter, r *http.Request, code int, data []Renderer) {}
 
 func RenderError(w http.ResponseWriter, r *http.Request, code int, svrErr error) {
 	var err error

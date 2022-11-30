@@ -3,9 +3,19 @@ package model
 import "time"
 
 type Transaction struct {
-	ID         string
-	Timestamp  time.Time
-	Quantities map[Currency]float64
-	Sender     Account
-	Recipient  Account
+	ID                 string             `firestore:"id"`
+	Quantities         map[string]float64 `firestore:"quantities"` // The keys are currency IDs
+	SenderAccountID    string             `firestore:"sender"`     // Sender account ID
+	RecipientAccountID string             `firestore:"recipient"`  // Recipient Account ID
+	Timestamp          time.Time          `firestore:"timestamp"`
+}
+
+func NewTransaction() Transaction {
+	return Transaction{
+		ID:                 "",
+		Quantities:         map[string]float64{},
+		SenderAccountID:    "",
+		RecipientAccountID: "",
+		Timestamp:          time.Now(),
+	}
 }

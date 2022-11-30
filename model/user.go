@@ -7,3 +7,13 @@ type User struct {
 	PhoneNumber string `firestore:"phoneNumber"`
 	Token       string `firestore:"token"`
 }
+
+func NewUser() User {
+	return User{
+		ID:          "",
+		Name:        "",
+		Email:       "",
+		PhoneNumber: "",
+		Token:       "",
+	}
+}

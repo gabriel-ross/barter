@@ -1,4 +1,4 @@
-package user
+package transaction
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
-		data := model.NewUser()
+		data := model.NewTransaction()
 
 		err = BindRequest(r, &data)
 		if err != nil {
@@ -106,7 +106,7 @@ func (svc *Service) handleUpdate() http.HandlerFunc {
 		ctx := context.TODO()
 		var err error
 		id := chi.URLParam(r, "id")
-		data := model.NewUser()
+		data := model.NewTransaction()
 
 		err = BindRequest(r, &data)
 		if err != nil {

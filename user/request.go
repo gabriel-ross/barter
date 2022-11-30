@@ -16,7 +16,7 @@ type request struct {
 
 // BindRequest binds the fields defined in request of a request to a User.
 // This method also extracts the token from the header "Token".
-func BindRequest(r *http.Request, u *model.User) (err error) {
+func BindRequest(r *http.Request, m *model.User) (err error) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
@@ -25,9 +25,9 @@ func BindRequest(r *http.Request, u *model.User) (err error) {
 	var reqBody request
 	err = json.Unmarshal(body, &reqBody)
 
-	u.Name = reqBody.Name
-	u.Email = reqBody.Email
-	u.PhoneNumber = reqBody.PhoneNumber
-	u.Token = r.Header.Get("Token")
+	m.Name = reqBody.Name
+	m.Email = reqBody.Email
+	m.PhoneNumber = reqBody.PhoneNumber
+	m.Token = r.Header.Get("Token")
 	return nil
 }

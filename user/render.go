@@ -1,7 +1,6 @@
 package user
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -27,27 +26,18 @@ type listResponse struct {
 	Self   string     `json:"self"`
 }
 
-func (svc *Service) newResponse(u model.User) response {
+func (svc *Service) newResponse(m model.User) response {
 	return response{
-		ID:          u.ID,
-		Name:        u.Name,
-		Email:       u.Email,
-		PhoneNumber: u.PhoneNumber,
-		Self:        fmt.Sprintf("%s/%s", svc.absResPath, u.ID),
+		ID:          m.ID,
+		Name:        m.Name,
+		Email:       m.Email,
+		PhoneNumber: m.PhoneNumber,
+		Self:        fmt.Sprintf("%s/%s", svc.absolutePath, m.ID),
 	}
 }
 
-func (svc *Service) RenderResponse(w http.ResponseWriter, r *http.Request, u model.User, code int) {
-	resp := svc.newResponse(u)
-	body, err := json.Marshal(resp)
-	if err != nil {
-		barter.RenderError(w, r, http.StatusInternalServerError, err)
-		return
-	}
-
-	w.WriteHeader(code)
-	w.Write(body)
-	return
+func (svc *Service) RenderResponse(w http.ResponseWriter, r *http.Request, code int, u model.User) {
+	barter.WriteResponse(w, r, code, svc.newResponse(u))
 }
 
 func (svc *Service) RenderListResponse(w http.ResponseWriter, r *http.Request, code int, users []model.User, offset, limit, count int) {
@@ -61,25 +51,17 @@ func (svc *Service) RenderListResponse(w http.ResponseWriter, r *http.Request, c
 		Count:  count,
 		Offset: offset,
 		Limit:  limit,
-		Self:   svc.absResPath,
+		Self:   svc.absolutePath,
 	}
 
 	if offset > 0 {
-		resp.Prev = fmt.Sprintf("%s?offset=%d&limit=%d", svc.absResPath, max(0, offset-limit), limit)
+		resp.Prev = fmt.Sprintf("%s?offset=%d&limit=%d", svc.absolutePath, max(0, offset-limit), limit)
 	}
 	if offset+limit < count {
-		resp.Next = fmt.Sprintf("%s?offset=%d&limit=%d", svc.absResPath, offset+limit, limit)
+		resp.Next = fmt.Sprintf("%s?offset=%d&limit=%d", svc.absolutePath, offset+limit, limit)
 	}
 
-	body, err := json.Marshal(resp)
-	if err != nil {
-		barter.RenderError(w, r, http.StatusInternalServerError, err)
-		return
-	}
-
-	w.WriteHeader(code)
-	w.Write(body)
-	return
+	barter.WriteResponse(w, r, code, resp)
 }
 
 func max(x, y int) int {

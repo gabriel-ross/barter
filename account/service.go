@@ -1,4 +1,4 @@
-package user
+package account
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type Service struct {
 	absolutePath string
 }
 
-// New mounts the User service router at baseURL+"/"+resourceSlug and returns
+// New mounts the Account service router at baseURL+"/"+resourceSlug and returns
 // a point to the new service.
 func New(router chi.Router, db *firestore.Client, baseURL, resourceSlug string) *Service {
 	svc := &Service{

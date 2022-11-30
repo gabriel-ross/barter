@@ -28,9 +28,9 @@ func (svc *Service) list(ctx context.Context, offset, limit int) (_ []model.User
 			break
 		}
 
-		var user model.User
-		dsnap.DataTo(&user)
-		resp = append(resp, user)
+		var m model.User
+		dsnap.DataTo(&m)
+		resp = append(resp, m)
 	}
 	return resp, nil
 }
@@ -49,9 +49,9 @@ func (svc *Service) read(ctx context.Context, id string) (_ model.User, err erro
 		return model.User{}, err
 	}
 
-	var user model.User
-	dsnap.DataTo(&user)
-	return user, nil
+	var m model.User
+	dsnap.DataTo(&m)
+	return m, nil
 }
 
 func (svc *Service) exists(ctx context.Context, id string) (_ bool, err error) {
