@@ -18,14 +18,16 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
-		data := model.NewAccount()
+		req := model.NewAccount()
 
-		err = BindRequest(r, &data)
+		err = BindRequest(r, &req)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
 			return
 		}
 
+		data := model.NewAccount()
+		data.UserID = req.UserID
 		resp, err := svc.create(ctx, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
@@ -134,8 +136,8 @@ func (svc *Service) setUser() http.HandlerFunc {
 		var err error
 		id := chi.URLParam(r, "id")
 
-		user := model.NewAccount()
-		err = BindRequest(r, &user)
+		req := model.NewAccount()
+		err = BindRequest(r, &req)
 
 		data, err := svc.read(ctx, id)
 		if err != nil && status.Code(err) != codes.NotFound {
@@ -143,7 +145,7 @@ func (svc *Service) setUser() http.HandlerFunc {
 			return
 		}
 
-		data.UserID = user.ID
+		data.UserID = req.UserID
 		_, err = svc.update(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())

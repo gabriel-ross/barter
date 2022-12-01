@@ -12,7 +12,7 @@ import (
 type request struct {
 	Quantities         map[string]float64 `json:"quantities"`
 	SenderAccountID    string             `json:"sender"`
-	RecipientAccountID string             `json:"Recipient"`
+	RecipientAccountID string             `json:"recipient"`
 	Timestamp          time.Time          `json:"timestamp"`
 }
 

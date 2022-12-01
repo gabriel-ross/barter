@@ -9,7 +9,9 @@ import (
 )
 
 type request struct {
-	UserID string `json:"user"`
+	UserID     string             `json:"user"`
+	Funds      map[string]float64 `json:"funds"`
+	Reputation int                `json:"reputation"`
 }
 
 // BindRequest binds the fields defined in body of a request to an Account.
@@ -24,5 +26,7 @@ func BindRequest(r *http.Request, m *model.Account) (err error) {
 	err = json.Unmarshal(body, &reqBody)
 
 	m.UserID = reqBody.UserID
+	m.Funds = reqBody.Funds
+	m.Reputation = reqBody.Reputation
 	return nil
 }
