@@ -50,12 +50,18 @@ func main() {
 	// Mount index page
 	r.Get("/", index())
 
+	supportedMIMETypes := map[string]struct{}{
+		"*":                struct{}{},
+		"application/json": struct{}{},
+	}
+
 	// Instantiate and mount services
 	auth.New(r, fsClient, oauth2Config, APPLICATION_URL, "auth")
-	user.New(r, fsClient, APPLICATION_URL, "users")
-	transaction.New(r, fsClient, APPLICATION_URL, "transactions")
-	account.New(r, fsClient, APPLICATION_URL, "accounts")
+	user.New(r, fsClient, APPLICATION_URL, "users", supportedMIMETypes)
+	transaction.New(r, fsClient, APPLICATION_URL, "transactions", supportedMIMETypes)
+	account.New(r, fsClient, APPLICATION_URL, "accounts", supportedMIMETypes)
 
+	log.Println("Server up and running on port: ", PORT)
 	http.ListenAndServe(PORT, r)
 }
 
