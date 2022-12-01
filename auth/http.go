@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/gabriel-ross/barter"
@@ -56,6 +57,8 @@ func (svc *Service) getToken() http.HandlerFunc {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "error encountered while validating token %s: %s", jwt, err.Error())
 			return
 		}
+
+		log.Println("made it this far")
 
 		// Register new user in database if they don't exist
 		user := model.NewUser()

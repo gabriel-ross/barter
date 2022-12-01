@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"cloud.google.com/go/firestore"
+	"github.com/gabriel-ross/barter"
 	"github.com/gabriel-ross/barter/model"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
@@ -21,9 +21,13 @@ func (svc *Service) create(ctx context.Context, data model.Account) (_ model.Acc
 	return data, nil
 }
 
-func (svc *Service) list(ctx context.Context, offset, limit int) (_ []model.Account, err error) {
+func (svc *Service) list(ctx context.Context, options ...barter.QueryOption) (_ []model.Account, err error) {
 	resp := []model.Account{}
-	iter := svc.db.Collection("accounts").OrderBy("id", firestore.Asc).StartAt(offset).Limit(limit).Documents(ctx)
+	query := svc.db.Collection("accounts").Query
+	for _, option := range options {
+		query = option(query)
+	}
+	iter := query.Documents(ctx)
 	for {
 		dsnap, err := iter.Next()
 		if err == iterator.Done {
@@ -37,8 +41,12 @@ func (svc *Service) list(ctx context.Context, offset, limit int) (_ []model.Acco
 	return resp, nil
 }
 
-func (svc *Service) count(ctx context.Context) (_ int, err error) {
-	docs, err := svc.db.Collection("accounts").Documents(ctx).GetAll()
+func (svc *Service) count(ctx context.Context, options ...barter.QueryOption) (_ int, err error) {
+	query := svc.db.Collection("accounts").Query
+	for _, option := range options {
+		query = option(query)
+	}
+	docs, err := query.Documents(ctx).GetAll()
 	if err != nil {
 		return 0, err
 	}

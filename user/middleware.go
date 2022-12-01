@@ -1,0 +1,38 @@
+package user
+
+import (
+	"context"
+	"errors"
+	"net/http"
+
+	"github.com/gabriel-ross/barter"
+	"github.com/go-chi/chi"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+// ValidateUserExistsAndRequestorAccess validates the User with "id" exists
+// and that the requestor has permission to access the resource. If the User has
+// no owner any user id can modify it.
+func (svc *Service) ValidateUserExistsAndRequestorAccess(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.TODO()
+		var err error
+
+		id := chi.URLParam(r, "id")
+		data, err := svc.read(ctx, id)
+		if status.Code(err) == codes.NotFound {
+			barter.RenderError(w, r, http.StatusNotFound, errors.New("resource not found"), "%s", err.Error())
+			return
+		}
+
+		resourceOwner := data.ID
+		requestor := r.Header.Get("Subject")
+		if resourceOwner != "" && requestor != resourceOwner {
+			barter.RenderError(w, r, http.StatusForbidden, nil, "user %s does not have permission to modify resource owned by %s", requestor, resourceOwner)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

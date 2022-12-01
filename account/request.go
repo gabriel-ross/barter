@@ -9,7 +9,7 @@ import (
 )
 
 type request struct {
-	UserID string `json:"UserID"`
+	UserID string `json:"user"`
 }
 
 // BindRequest binds the fields defined in body of a request to an Account.

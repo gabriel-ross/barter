@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter"
 	"github.com/gabriel-ross/barter/model"
 	"github.com/go-chi/chi"
@@ -45,13 +46,15 @@ func (svc *Service) handleList() http.HandlerFunc {
 			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
 			return
 		}
-		resp, err := svc.list(ctx, offset, limit)
+
+		requestor := r.Header.Get("Subject")
+		resp, err := svc.list(ctx, barter.WithFilter("userID", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
-		count, err := svc.count(ctx)
+		count, err := svc.count(ctx, barter.WithFilter("userID", barter.Eq, requestor))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -59,27 +62,6 @@ func (svc *Service) handleList() http.HandlerFunc {
 
 		svc.RenderListResponse(w, r, http.StatusOK, resp, offset, limit, count)
 	}
-}
-
-func extractPaginate(r *http.Request) (_ int, _ int, err error) {
-	offset := 0
-	limit := 5
-
-	if offsetParam := r.URL.Query().Get("offset"); offsetParam != "" {
-		offset, err = strconv.Atoi(offsetParam)
-		if err != nil {
-			return 0, 0, err
-		}
-	}
-
-	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
-		limit, err = strconv.Atoi(limitParam)
-		if err != nil {
-			return 0, 0, err
-		}
-	}
-
-	return offset, limit, nil
 }
 
 func (svc *Service) handleGet() http.HandlerFunc {
@@ -114,13 +96,13 @@ func (svc *Service) handleUpdate() http.HandlerFunc {
 			return
 		}
 
-		resp, err := svc.update(ctx, id, data)
+		_, err = svc.update(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
-		svc.RenderResponse(w, r, http.StatusNoContent, resp)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -131,10 +113,7 @@ func (svc *Service) handleDelete() http.HandlerFunc {
 		id := chi.URLParam(r, "id")
 
 		_, err = svc.read(ctx, id)
-		if status.Code(err) == codes.NotFound {
-			barter.RenderError(w, r, http.StatusNotFound, errors.New("resource not found"), "%s", err.Error())
-			return
-		} else if err != nil {
+		if err != nil && status.Code(err) != codes.NotFound {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
@@ -147,4 +126,74 @@ func (svc *Service) handleDelete() http.HandlerFunc {
 
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func (svc *Service) setUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.TODO()
+		var err error
+		id := chi.URLParam(r, "id")
+
+		user := model.NewAccount()
+		err = BindRequest(r, &user)
+
+		data, err := svc.read(ctx, id)
+		if err != nil && status.Code(err) != codes.NotFound {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		data.UserID = user.ID
+		_, err = svc.update(ctx, id, data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (svc *Service) removeUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.TODO()
+		var err error
+		id := chi.URLParam(r, "id")
+
+		data, err := svc.read(ctx, id)
+		if err != nil && status.Code(err) != codes.NotFound {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		data.UserID = ""
+		_, err = svc.update(ctx, id, data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func extractPaginate(r *http.Request) (_ int, _ int, err error) {
+	offset := 0
+	limit := 5
+
+	if offsetParam := r.URL.Query().Get("offset"); offsetParam != "" {
+		offset, err = strconv.Atoi(offsetParam)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		limit, err = strconv.Atoi(limitParam)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	return offset, limit, nil
 }

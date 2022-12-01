@@ -18,6 +18,7 @@ func WriteResponse(w http.ResponseWriter, r *http.Request, code int, data any) {
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(respBody)
 	return
@@ -48,10 +49,11 @@ func RenderError(w http.ResponseWriter, r *http.Request, code int, svrErr error,
 	errResp := newErrorResponse(code, svrErr, format, args...)
 	respBody, err := json.Marshal(errResp)
 	if err != nil {
-		writeErrorError(w, err)
+		mustWriteError(w, err)
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(respBody)
 	return
@@ -73,7 +75,7 @@ func newErrorResponse(code int, err error, format string, args ...any) *errorRes
 	}
 }
 
-func writeErrorError(w http.ResponseWriter, err error) {
+func mustWriteError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write([]byte("error encountered while attempting to write error: " + err.Error()))
 	return
