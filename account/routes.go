@@ -11,12 +11,14 @@ func (svc *Service) Routes() chi.Router {
 	r.Use(barter.ValidateJWT)
 
 	r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Post("/", svc.handleCreate())
-	r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs), svc.ValidateAccountExistsAndRequestorAccess).Get("/", svc.handleList())
+	r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Get("/", svc.handleList())
+
 	r.Route("/{id}", func(r chi.Router) {
 		r.Use(svc.ValidateAccountExistsAndRequestorAccess)
 
 		r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Get("/", svc.handleGet())
-		r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Put("/", svc.handleUpdate())
+		r.Put("/", svc.handlePut())
+		r.Patch("/", svc.handlePatch())
 		r.Delete("/", svc.handleDelete())
 
 		r.Route("/user", func(r chi.Router) {

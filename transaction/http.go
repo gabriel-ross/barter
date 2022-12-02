@@ -82,7 +82,7 @@ func (svc *Service) handleGet() http.HandlerFunc {
 	}
 }
 
-func (svc *Service) handleUpdate() http.HandlerFunc {
+func (svc *Service) handlePut() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
@@ -102,6 +102,12 @@ func (svc *Service) handleUpdate() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (svc *Service) handlePatch() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("transaction patch"))
 	}
 }
 

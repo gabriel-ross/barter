@@ -76,7 +76,7 @@ func (svc *Service) handleGet() http.HandlerFunc {
 	}
 }
 
-func (svc *Service) handleUpdate() http.HandlerFunc {
+func (svc *Service) handlePut() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
@@ -89,13 +89,19 @@ func (svc *Service) handleUpdate() http.HandlerFunc {
 			return
 		}
 
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (svc *Service) handlePatch() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("user patch"))
 	}
 }
 

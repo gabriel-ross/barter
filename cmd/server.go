@@ -51,7 +51,7 @@ func main() {
 	r.Get("/", index())
 
 	supportedMIMETypes := map[string]struct{}{
-		"*":                struct{}{},
+		"*/*":              struct{}{},
 		"application/json": struct{}{},
 	}
 

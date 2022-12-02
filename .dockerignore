@@ -1,4 +1,5 @@
 # Sensitive environment variables
 .env
 key.json
-todo.md
+docs
+*.md

@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter/model"
@@ -65,7 +67,7 @@ func (svc *Service) exists(ctx context.Context, id string) (_ bool, err error) {
 	}
 }
 
-func (svc *Service) update(ctx context.Context, id string, data model.User) (_ model.User, err error) {
+func (svc *Service) set(ctx context.Context, id string, data model.User) (_ model.User, err error) {
 	data.ID = id
 	_, err = svc.db.Collection("users").Doc(data.ID).Set(ctx, data)
 	if err != nil {
@@ -75,6 +77,16 @@ func (svc *Service) update(ctx context.Context, id string, data model.User) (_ m
 }
 
 func (svc *Service) updateNonZero(ctx context.Context, id string, data model.User) (_ model.User, err error) {
+
+	foo := reflect.TypeOf(data)
+	for i := 0; i < foo.NumField(); i++ {
+		path := foo.Field(i).Tag.Get("firestore")
+		fmt.Println(path)
+	}
+
+	// TODO: build firestore update slice
+	// TODO: consider how this might work with nested objects
+
 	return data, nil
 }
 
