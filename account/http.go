@@ -18,7 +18,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
-		req := model.NewAccount()
+		req := model.Account{}
 
 		err = BindRequest(r, &req)
 		if err != nil {
@@ -26,7 +26,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 			return
 		}
 
-		data := model.NewAccount()
+		data := model.Account{}
 		data.Owner = req.Owner
 		resp, err := svc.create(ctx, data)
 		if err != nil {
@@ -50,16 +50,18 @@ func (svc *Service) handleList() http.HandlerFunc {
 		}
 
 		requestor := r.Header.Get("Subject")
-		resp, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
+		// resp, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
+		all, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
-
-		count, err := svc.count(ctx, barter.WithFilter("Owner", barter.Eq, requestor))
-		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
-			return
+		var resp []model.Account
+		count := len(all)
+		if offset+limit >= count {
+			resp = all[offset:]
+		} else {
+			resp = all[offset : offset+limit]
 		}
 
 		svc.RenderListResponse(w, r, http.StatusOK, resp, offset, limit, count)
@@ -90,7 +92,7 @@ func (svc *Service) handlePut() http.HandlerFunc {
 		ctx := context.TODO()
 		var err error
 		id := chi.URLParam(r, "id")
-		data := model.NewAccount()
+		data := model.Account{}
 
 		err = BindRequest(r, &data)
 		if err != nil {
@@ -110,7 +112,24 @@ func (svc *Service) handlePut() http.HandlerFunc {
 
 func (svc *Service) handlePatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("account patch"))
+		ctx := context.TODO()
+		var err error
+		id := chi.URLParam(r, "id")
+		data := model.Account{}
+
+		err = BindRequest(r, &data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
+			return
+		}
+
+		_, err = svc.updateNonZero(ctx, id, data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -142,7 +161,7 @@ func (svc *Service) setOwner() http.HandlerFunc {
 		var err error
 		id := chi.URLParam(r, "id")
 
-		req := model.NewAccount()
+		req := model.Account{}
 		err = BindRequest(r, &req)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())

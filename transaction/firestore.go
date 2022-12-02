@@ -2,13 +2,17 @@ package transaction
 
 import (
 	"context"
+	"time"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter"
 	"github.com/gabriel-ross/barter/model"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+var zeroTime time.Time
 
 func (svc *Service) create(ctx context.Context, data model.Transaction) (_ model.Transaction, err error) {
 	data.ID = svc.db.Collection("transactions").NewDoc().ID
@@ -74,7 +78,7 @@ func (svc *Service) exists(ctx context.Context, id string) (_ bool, err error) {
 	}
 }
 
-func (svc *Service) update(ctx context.Context, id string, data model.Transaction) (_ model.Transaction, err error) {
+func (svc *Service) set(ctx context.Context, id string, data model.Transaction) (_ model.Transaction, err error) {
 	data.ID = id
 	_, err = svc.db.Collection("transactions").Doc(data.ID).Set(ctx, data)
 	if err != nil {
@@ -84,6 +88,37 @@ func (svc *Service) update(ctx context.Context, id string, data model.Transactio
 }
 
 func (svc *Service) updateNonZero(ctx context.Context, id string, data model.Transaction) (_ model.Transaction, err error) {
+	updates := []firestore.Update{}
+	if len(data.Quantities) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "quantities",
+			Value: data.Quantities,
+		})
+	}
+	if data.SenderAccountID != "" {
+		updates = append(updates, firestore.Update{
+			Path:  "sender",
+			Value: data.SenderAccountID,
+		})
+	}
+	if data.RecipientAccountID != "" {
+		updates = append(updates, firestore.Update{
+			Path:  "sender",
+			Value: data.RecipientAccountID,
+		})
+	}
+	if data.Timestamp.After(zeroTime) {
+		updates = append(updates, firestore.Update{
+			Path:  "timestamp",
+			Value: data.Timestamp,
+		})
+	}
+
+	_, err = svc.db.Collection("transactions").Doc(id).Update(ctx, updates)
+	if err != nil {
+		return model.Transaction{}, err
+	}
+
 	return data, nil
 }
 

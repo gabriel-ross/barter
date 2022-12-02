@@ -80,12 +80,18 @@ func (svc *Service) updateNonZero(ctx context.Context, id string, data model.Acc
 			Value: data.Owner,
 		})
 	}
-	for key, val := range data.Funds {
+	if len(data.Funds) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:  "funds." + key,
-			Value: firestore.Increment(val),
+			Path:  "funds",
+			Value: data.Funds,
 		})
 	}
+	// for key, val := range data.Funds {
+	// 	updates = append(updates, firestore.Update{
+	// 		Path:  "funds." + key,
+	// 		Value: firestore.Increment(val),
+	// 	})
+	// }
 	if data.Reputation > 0 {
 		updates = append(updates, firestore.Update{
 			Path:  "reputation",

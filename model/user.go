@@ -6,12 +6,3 @@ type User struct {
 	Email       string `firestore:"email"`
 	PhoneNumber string `firestore:"phoneNumber"`
 }
-
-func NewUser() User {
-	return User{
-		ID:          "",
-		Name:        "",
-		Email:       "",
-		PhoneNumber: "",
-	}
-}

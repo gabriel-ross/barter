@@ -9,13 +9,3 @@ type Transaction struct {
 	RecipientAccountID string             `firestore:"recipient"`  // Recipient Account ID
 	Timestamp          time.Time          `firestore:"timestamp"`
 }
-
-func NewTransaction() Transaction {
-	return Transaction{
-		ID:                 "",
-		Quantities:         map[string]float64{},
-		SenderAccountID:    "",
-		RecipientAccountID: "",
-		Timestamp:          time.Now(),
-	}
-}

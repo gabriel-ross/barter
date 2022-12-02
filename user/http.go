@@ -16,7 +16,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
-		data := model.NewUser()
+		data := model.User{}
 
 		err = BindRequest(r, &data)
 		if err != nil {
@@ -81,7 +81,7 @@ func (svc *Service) handlePut() http.HandlerFunc {
 		ctx := context.TODO()
 		var err error
 		id := chi.URLParam(r, "id")
-		data := model.NewUser()
+		data := model.User{}
 
 		err = BindRequest(r, &data)
 		if err != nil {
@@ -101,7 +101,24 @@ func (svc *Service) handlePut() http.HandlerFunc {
 
 func (svc *Service) handlePatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("user patch"))
+		ctx := context.TODO()
+		var err error
+		id := chi.URLParam(r, "id")
+		data := model.User{}
+
+		err = BindRequest(r, &data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
+			return
+		}
+
+		_, err = svc.updateNonZero(ctx, id, data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

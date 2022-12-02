@@ -18,7 +18,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
-		data := model.NewTransaction()
+		data := model.Transaction{}
 
 		err = BindRequest(r, &data)
 		if err != nil {
@@ -47,16 +47,18 @@ func (svc *Service) handleList() http.HandlerFunc {
 			return
 		}
 
-		resp, err := svc.list(ctx, barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
+		// resp, err := svc.list(ctx, barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
+		all, err := svc.list(ctx, barter.WithOrder("id", firestore.Asc))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
-
-		count, err := svc.count(ctx)
-		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
-			return
+		var resp []model.Transaction
+		count := len(all)
+		if offset+limit >= count {
+			resp = all[offset:]
+		} else {
+			resp = all[offset : offset+limit]
 		}
 
 		svc.RenderListResponse(w, r, http.StatusOK, resp, offset, limit, count)
@@ -87,7 +89,7 @@ func (svc *Service) handlePut() http.HandlerFunc {
 		ctx := context.TODO()
 		var err error
 		id := chi.URLParam(r, "id")
-		data := model.NewTransaction()
+		data := model.Transaction{}
 
 		err = BindRequest(r, &data)
 		if err != nil {
@@ -95,7 +97,7 @@ func (svc *Service) handlePut() http.HandlerFunc {
 			return
 		}
 
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -107,7 +109,24 @@ func (svc *Service) handlePut() http.HandlerFunc {
 
 func (svc *Service) handlePatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("transaction patch"))
+		ctx := context.TODO()
+		var err error
+		id := chi.URLParam(r, "id")
+		data := model.Transaction{}
+
+		err = BindRequest(r, &data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
+			return
+		}
+
+		_, err = svc.updateNonZero(ctx, id, data)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -142,7 +161,7 @@ func (svc *Service) setSender() http.HandlerFunc {
 		var err error
 		id := chi.URLParam(r, "id")
 
-		m := model.NewTransaction()
+		m := model.Transaction{}
 		err = BindRequest(r, &m)
 
 		data, err := svc.read(ctx, id)
@@ -152,7 +171,7 @@ func (svc *Service) setSender() http.HandlerFunc {
 		}
 
 		data.SenderAccountID = m.SenderAccountID
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -175,7 +194,7 @@ func (svc *Service) removeSender() http.HandlerFunc {
 		}
 
 		data.SenderAccountID = ""
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -191,7 +210,7 @@ func (svc *Service) setRecipient() http.HandlerFunc {
 		var err error
 		id := chi.URLParam(r, "id")
 
-		m := model.NewTransaction()
+		m := model.Transaction{}
 		err = BindRequest(r, &m)
 
 		data, err := svc.read(ctx, id)
@@ -201,7 +220,7 @@ func (svc *Service) setRecipient() http.HandlerFunc {
 		}
 
 		data.RecipientAccountID = m.RecipientAccountID
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -224,7 +243,7 @@ func (svc *Service) removeRecipient() http.HandlerFunc {
 		}
 
 		data.RecipientAccountID = ""
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return

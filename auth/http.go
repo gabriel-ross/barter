@@ -61,7 +61,7 @@ func (svc *Service) getToken() http.HandlerFunc {
 		log.Println("made it this far")
 
 		// Register new user in database if they don't exist
-		user := model.NewUser()
+		user := model.User{}
 		user.ID = payload.Subject
 		_, err = svc.createUser(ctx, user)
 		if err != nil {
