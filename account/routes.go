@@ -21,9 +21,9 @@ func (svc *Service) Routes() chi.Router {
 		r.Patch("/", svc.handlePatch())
 		r.Delete("/", svc.handleDelete())
 
-		r.Route("/user", func(r chi.Router) {
-			r.Put("/", svc.setUser())
-			r.Delete("/", svc.removeUser())
+		r.Route("/owner", func(r chi.Router) {
+			r.Put("/", svc.setOwner())
+			r.Delete("/", svc.removeOwner())
 		})
 	})
 

@@ -93,7 +93,6 @@ func (i *Issuer) exchangeToken() http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(token.Extra("id_token").(string)))
-		return
 	}
 }
 

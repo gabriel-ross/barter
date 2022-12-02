@@ -4,11 +4,10 @@ import (
 	"context"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter"
 	"github.com/gabriel-ross/barter/model"
 	"google.golang.org/api/iterator"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (svc *Service) create(ctx context.Context, data model.Account) (_ model.Account, err error) {
@@ -64,18 +63,7 @@ func (svc *Service) read(ctx context.Context, id string) (_ model.Account, err e
 	return m, nil
 }
 
-func (svc *Service) exists(ctx context.Context, id string) (_ bool, err error) {
-	_, err = svc.db.Collection("accounts").Doc(id).Get(ctx)
-	if status.Code(err) == codes.NotFound {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	} else {
-		return true, nil
-	}
-}
-
-func (svc *Service) update(ctx context.Context, id string, data model.Account) (_ model.Account, err error) {
+func (svc *Service) set(ctx context.Context, id string, data model.Account) (_ model.Account, err error) {
 	data.ID = id
 	_, err = svc.db.Collection("accounts").Doc(data.ID).Set(ctx, data)
 	if err != nil {
@@ -85,6 +73,31 @@ func (svc *Service) update(ctx context.Context, id string, data model.Account) (
 }
 
 func (svc *Service) updateNonZero(ctx context.Context, id string, data model.Account) (_ model.Account, err error) {
+	updates := []firestore.Update{}
+	if data.Owner != "" {
+		updates = append(updates, firestore.Update{
+			Path:  "owner",
+			Value: data.Owner,
+		})
+	}
+	for key, val := range data.Funds {
+		updates = append(updates, firestore.Update{
+			Path:  "funds." + key,
+			Value: firestore.Increment(val),
+		})
+	}
+	if data.Reputation > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "reputation",
+			Value: data.Reputation,
+		})
+	}
+
+	_, err = svc.db.Collection("accounts").Doc(id).Update(ctx, updates)
+	if err != nil {
+		return model.Account{}, err
+	}
+
 	return data, nil
 }
 

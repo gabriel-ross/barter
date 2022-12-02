@@ -26,7 +26,7 @@ func (svc *Service) ValidateAccountExistsAndRequestorAccess(next http.Handler) h
 			return
 		}
 
-		resourceOwner := data.UserID
+		resourceOwner := data.Owner
 		requestor := r.Header.Get("Subject")
 		if resourceOwner != "" && requestor != resourceOwner {
 			barter.RenderError(w, r, http.StatusForbidden, nil, "user %s does not have permission to modify resource owned by %s", requestor, resourceOwner)

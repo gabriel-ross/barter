@@ -9,7 +9,7 @@ import (
 )
 
 type request struct {
-	UserID     string             `json:"user"`
+	Owner      string             `json:"owner"`
 	Funds      map[string]float64 `json:"funds"`
 	Reputation int                `json:"reputation"`
 }
@@ -25,7 +25,7 @@ func BindRequest(r *http.Request, m *model.Account) (err error) {
 	var reqBody request
 	err = json.Unmarshal(body, &reqBody)
 
-	m.UserID = reqBody.UserID
+	m.Owner = reqBody.Owner
 	m.Funds = reqBody.Funds
 	m.Reputation = reqBody.Reputation
 	return nil

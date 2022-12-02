@@ -27,7 +27,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 		}
 
 		data := model.NewAccount()
-		data.UserID = req.UserID
+		data.Owner = req.Owner
 		resp, err := svc.create(ctx, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
@@ -50,13 +50,13 @@ func (svc *Service) handleList() http.HandlerFunc {
 		}
 
 		requestor := r.Header.Get("Subject")
-		resp, err := svc.list(ctx, barter.WithFilter("userID", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
+		resp, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
 
-		count, err := svc.count(ctx, barter.WithFilter("userID", barter.Eq, requestor))
+		count, err := svc.count(ctx, barter.WithFilter("Owner", barter.Eq, requestor))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -98,7 +98,7 @@ func (svc *Service) handlePut() http.HandlerFunc {
 			return
 		}
 
-		_, err = svc.update(ctx, id, data)
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -136,7 +136,7 @@ func (svc *Service) handleDelete() http.HandlerFunc {
 	}
 }
 
-func (svc *Service) setUser() http.HandlerFunc {
+func (svc *Service) setOwner() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
@@ -144,6 +144,10 @@ func (svc *Service) setUser() http.HandlerFunc {
 
 		req := model.NewAccount()
 		err = BindRequest(r, &req)
+		if err != nil {
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
+			return
+		}
 
 		data, err := svc.read(ctx, id)
 		if err != nil && status.Code(err) != codes.NotFound {
@@ -151,8 +155,8 @@ func (svc *Service) setUser() http.HandlerFunc {
 			return
 		}
 
-		data.UserID = req.UserID
-		_, err = svc.update(ctx, id, data)
+		data.Owner = req.Owner
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
@@ -162,7 +166,7 @@ func (svc *Service) setUser() http.HandlerFunc {
 	}
 }
 
-func (svc *Service) removeUser() http.HandlerFunc {
+func (svc *Service) removeOwner() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.TODO()
 		var err error
@@ -174,8 +178,8 @@ func (svc *Service) removeUser() http.HandlerFunc {
 			return
 		}
 
-		data.UserID = ""
-		_, err = svc.update(ctx, id, data)
+		data.Owner = ""
+		_, err = svc.set(ctx, id, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return

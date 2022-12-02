@@ -11,7 +11,7 @@ import (
 
 type response struct {
 	ID                string             `json:"id"`
-	UserID            string             `json:"user"`
+	Owner             string             `json:"owner"`
 	Funds             map[string]float64 `json:"funds"`
 	Reputation        int                `json:"reputation"`
 	CreationTimestamp time.Time          `json:"creationTimestamp"`
@@ -31,7 +31,7 @@ type listResponse struct {
 func (svc *Service) newResponse(m model.Account) response {
 	return response{
 		ID:                m.ID,
-		UserID:            m.UserID,
+		Owner:             m.Owner,
 		Funds:             m.Funds,
 		Reputation:        m.Reputation,
 		CreationTimestamp: m.CreationTimestamp,
