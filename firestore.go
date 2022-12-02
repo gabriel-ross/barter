@@ -39,3 +39,19 @@ func WithLimit(limit int) func(firestore.Query) firestore.Query {
 }
 
 type operator string
+
+func IsZeroValue(val interface{}) bool {
+	switch t := val.(type) {
+	case int:
+		return t == 0
+	case float64:
+		return t == 0.0
+	case string:
+		return t == ""
+	case []any:
+		return len(t) == 0
+	case map[any]any:
+		return len(t) == 0
+	}
+	return false
+}

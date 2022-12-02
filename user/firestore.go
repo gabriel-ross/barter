@@ -2,8 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter/model"
@@ -78,14 +76,40 @@ func (svc *Service) set(ctx context.Context, id string, data model.User) (_ mode
 
 func (svc *Service) updateNonZero(ctx context.Context, id string, data model.User) (_ model.User, err error) {
 
-	foo := reflect.TypeOf(data)
-	for i := 0; i < foo.NumField(); i++ {
-		path := foo.Field(i).Tag.Get("firestore")
-		fmt.Println(path)
+	// foo := reflect.TypeOf(data)
+	// for i := 0; i < foo.NumField(); i++ {
+	// 	path := foo.Field(i).Tag.Get("firestore")
+	// 	fmt.Println(path)
+	// }
+
+	// TODO: consider how this might work with nested objects
+
+	// Build update slice
+	updates := []firestore.Update{}
+
+	if data.Name != "" {
+		updates = append(updates, firestore.Update{
+			Path:  "name",
+			Value: data.Name,
+		})
+	}
+	if data.Email != "" {
+		updates = append(updates, firestore.Update{
+			Path:  "email",
+			Value: data.Email,
+		})
+	}
+	if data.PhoneNumber != "" {
+		updates = append(updates, firestore.Update{
+			Path:  "phoneNumber",
+			Value: data.PhoneNumber,
+		})
 	}
 
-	// TODO: build firestore update slice
-	// TODO: consider how this might work with nested objects
+	_, err = svc.db.Collection("users").Doc(id).Update(ctx, updates)
+	if err != nil {
+		return model.User{}, err
+	}
 
 	return data, nil
 }
