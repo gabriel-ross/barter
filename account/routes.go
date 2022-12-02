@@ -8,13 +8,15 @@ import (
 func (svc *Service) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(barter.ValidateJWT, svc.ValidateAccountExistsAndRequestorAccess)
+	r.Use(barter.ValidateJWT)
 
 	r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Post("/", svc.handleCreate())
-	r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Get("/", svc.handleList())
+	r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs), svc.ValidateAccountExistsAndRequestorAccess).Get("/", svc.handleList())
 	r.Route("/{id}", func(r chi.Router) {
+		r.Use(svc.ValidateAccountExistsAndRequestorAccess)
+
 		r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Get("/", svc.handleGet())
-		r.Put("/", svc.handleUpdate())
+		r.With(barter.ValidateAcceptHeader(svc.supportedResponseMIMEs)).Put("/", svc.handleUpdate())
 		r.Delete("/", svc.handleDelete())
 
 		r.Route("/user", func(r chi.Router) {

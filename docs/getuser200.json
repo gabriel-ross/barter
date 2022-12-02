@@ -1,0 +1,7 @@
+{
+    "id": "1123",
+    "name": "example name",
+    "email": "username@example.com",
+    "phoneNumber": "111-111-1111",
+    "self": "https://example.com/users/1123"
+}

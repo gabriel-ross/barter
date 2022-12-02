@@ -1,0 +1,18 @@
+{
+    "data": [
+        {
+            "id": "1123",
+            "name": "example name",
+            "email": "username@example.com",
+            "phoneNumber": "111-111-1111",
+            "self": "https://example.com/users/1123"
+        }
+    ],
+    "count": 100,
+    "offset": 1,
+    "limit": 1,
+    "prev": "https://example.com/users?offset=0&limit=1",
+    "next": "https://example.com/users?offset=2&limit=1",
+    "self": "https://example.com/users"       
+}
+
