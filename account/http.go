@@ -26,8 +26,11 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 			return
 		}
 
-		data := model.Account{}
-		data.Owner = req.Owner
+		data := model.Account{
+			Owner:      req.Owner,
+			Balances:   map[string]float64{},
+			Reputation: 100,
+		}
 		resp, err := svc.create(ctx, data)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())

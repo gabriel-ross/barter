@@ -43,13 +43,12 @@ func ValidateJWT(next http.Handler) http.Handler {
 		var err error
 		tokenElements := strings.Split(r.Header.Get("Authorization"), "Bearer ")
 		if len(tokenElements) < 2 {
-			RenderError(w, r, http.StatusUnauthorized, err, "")
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		payload, err := idtoken.Validate(context.TODO(), tokenElements[1], "")
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			RenderError(w, r, http.StatusUnauthorized, err, "")
 			return
 		}
 		r.Header.Set("Token-raw", tokenElements[1])

@@ -19,25 +19,27 @@ func (svc *Service) create(ctx context.Context, data model.Transaction) (_ model
 		return model.Transaction{}, err
 	}
 
-	payments := []firestore.Update{}
-	credits := []firestore.Update{}
-	for key, val := range data.Quantities {
-		payments = append(payments, firestore.Update{
-			Path:  "balances." + key,
-			Value: firestore.Increment((-1) * val),
-		})
-		credits = append(payments, firestore.Update{
-			Path:  "balances." + key,
-			Value: firestore.Increment(val),
-		})
-	}
-	_, err = svc.db.Collection("accounts").Doc(data.SenderAccountID).Update(ctx, payments)
-	if err != nil {
-		return model.Transaction{}, err
-	}
-	_, err = svc.db.Collection("accounts").Doc(data.RecipientAccountID).Update(ctx, credits)
-	if err != nil {
-		return model.Transaction{}, err
+	if data.SenderAccountID != data.RecipientAccountID {
+		payments := []firestore.Update{}
+		credits := []firestore.Update{}
+		for key, val := range data.Quantities {
+			payments = append(payments, firestore.Update{
+				Path:  "balances." + key,
+				Value: firestore.Increment((-1) * val),
+			})
+			credits = append(payments, firestore.Update{
+				Path:  "balances." + key,
+				Value: firestore.Increment(val),
+			})
+		}
+		_, err = svc.db.Collection("accounts").Doc(data.SenderAccountID).Update(ctx, payments)
+		// if err != nil {
+		// 	return model.Transaction{}, err
+		// }
+		_, err = svc.db.Collection("accounts").Doc(data.RecipientAccountID).Update(ctx, credits)
+		// if err != nil {
+		// 	return model.Transaction{}, err
+		// }
 	}
 
 	return data, nil
@@ -45,7 +47,7 @@ func (svc *Service) create(ctx context.Context, data model.Transaction) (_ model
 
 func (svc *Service) list(ctx context.Context, options ...barter.QueryOption) (_ []model.Transaction, err error) {
 	resp := []model.Transaction{}
-	query := svc.db.Collection("accounts").Query
+	query := svc.db.Collection("transactions").Query
 	for _, option := range options {
 		query = option(query)
 	}
@@ -150,25 +152,28 @@ func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error
 		return err
 	}
 
-	payments := []firestore.Update{}
-	credits := []firestore.Update{}
-	for key, val := range data.Quantities {
-		payments = append(payments, firestore.Update{
-			Path:  "balances." + key,
-			Value: firestore.Increment((-1) * val),
-		})
-		credits = append(payments, firestore.Update{
-			Path:  "balances." + key,
-			Value: firestore.Increment(val),
-		})
-	}
-	_, err = svc.db.Collection("accounts").Doc(data.SenderAccountID).Update(ctx, credits)
-	if err != nil {
-		return err
-	}
-	_, err = svc.db.Collection("accounts").Doc(data.RecipientAccountID).Update(ctx, payments)
-	if err != nil {
-		return err
+	if data.SenderAccountID != data.RecipientAccountID {
+		payments := []firestore.Update{}
+		credits := []firestore.Update{}
+		for key, val := range data.Quantities {
+			payments = append(payments, firestore.Update{
+				Path:  "balances." + key,
+				Value: firestore.Increment((-1) * val),
+			})
+			credits = append(payments, firestore.Update{
+				Path:  "balances." + key,
+				Value: firestore.Increment(val),
+			})
+		}
+		_, err = svc.db.Collection("accounts").Doc(data.SenderAccountID).Update(ctx, credits)
+		// if err != nil {
+		// 	return err
+		// }
+
+		_, err = svc.db.Collection("accounts").Doc(data.RecipientAccountID).Update(ctx, payments)
+		// if err != nil {
+		// 	return err
+		// }
 	}
 
 	return nil

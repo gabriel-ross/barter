@@ -28,7 +28,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 
 		resp, err := svc.create(ctx, data)
 		if err != nil {
-			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
+			barter.RenderError(w, r, http.StatusBadRequest, err, "%s", err.Error())
 			return
 		}
 
