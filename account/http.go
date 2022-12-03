@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gabriel-ross/barter"
 	"github.com/gabriel-ross/barter/model"
 	"github.com/go-chi/chi"
@@ -54,7 +53,7 @@ func (svc *Service) handleList() http.HandlerFunc {
 
 		requestor := r.Header.Get("Subject")
 		// resp, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
-		all, err := svc.list(ctx, barter.WithFilter("owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc))
+		all, err := svc.list(ctx, barter.WithFilter("owner", barter.Eq, requestor))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
