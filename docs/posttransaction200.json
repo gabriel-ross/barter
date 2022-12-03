@@ -1,0 +1,11 @@
+{
+    "id": "1123",
+    "quantities": {
+        "apples": 10,
+        "dollars": 100
+    },
+    "sender": "abcd",
+    "recipient": "efgh",
+    "timestamp": "2022-12-02 21:23:25.350964 -0500 EST m=+0.001000101",
+    "self": "https://example.com/transactions/1123"
+}

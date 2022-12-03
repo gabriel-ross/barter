@@ -1,0 +1,19 @@
+{
+    "data": [
+        {
+            "id": "4567",
+            "owner": "1123",
+            "balances": {},
+            "reputation": 100,
+            "creationTimestamp": "2022-12-02 21:23:25.350964 -0500 EST m=+0.001000101",
+            "self": "https://example.com/accounts/1123"
+        }   
+    ],
+    "count": 100,
+    "offset": 1,
+    "limit": 1,
+    "prev": "https://example.com/accounts?offset=0&limit=1",
+    "next": "https://example.com/accounts?offset=2&limit=1",
+    "self": "https://example.com/accounts"       
+}
+

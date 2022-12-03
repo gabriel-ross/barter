@@ -23,11 +23,11 @@ func (svc *Service) create(ctx context.Context, data model.Transaction) (_ model
 	credits := []firestore.Update{}
 	for key, val := range data.Quantities {
 		payments = append(payments, firestore.Update{
-			Path:  "funds." + key,
+			Path:  "balances." + key,
 			Value: firestore.Increment((-1) * val),
 		})
 		credits = append(payments, firestore.Update{
-			Path:  "funds." + key,
+			Path:  "balances." + key,
 			Value: firestore.Increment(val),
 		})
 	}
@@ -154,11 +154,11 @@ func (svc *Service) cascadeDelete(ctx context.Context, id string) (err error) {
 	credits := []firestore.Update{}
 	for key, val := range data.Quantities {
 		payments = append(payments, firestore.Update{
-			Path:  "funds." + key,
+			Path:  "balances." + key,
 			Value: firestore.Increment((-1) * val),
 		})
 		credits = append(payments, firestore.Update{
-			Path:  "funds." + key,
+			Path:  "balances." + key,
 			Value: firestore.Increment(val),
 		})
 	}

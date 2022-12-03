@@ -9,7 +9,7 @@ Token string
 Account:
 ID string
 User User
-Funds map[string]float64
+Balances map[string]float64
 TransactionVolume int
 CreationDate datetime
 

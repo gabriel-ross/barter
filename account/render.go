@@ -12,7 +12,7 @@ import (
 type response struct {
 	ID                string             `json:"id"`
 	Owner             string             `json:"owner"`
-	Funds             map[string]float64 `json:"funds"`
+	Balances          map[string]float64 `json:"balances"`
 	Reputation        int                `json:"reputation"`
 	CreationTimestamp time.Time          `json:"creationTimestamp"`
 	Self              string             `json:"self"`
@@ -32,7 +32,7 @@ func (svc *Service) newResponse(m model.Account) response {
 	return response{
 		ID:                m.ID,
 		Owner:             m.Owner,
-		Funds:             m.Funds,
+		Balances:          m.Balances,
 		Reputation:        m.Reputation,
 		CreationTimestamp: m.CreationTimestamp,
 		Self:              fmt.Sprintf("%s/%s", svc.absolutePath, m.ID),

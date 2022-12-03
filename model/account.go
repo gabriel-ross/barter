@@ -5,7 +5,7 @@ import "time"
 type Account struct {
 	ID                string             `firestore:"id"`
 	Owner             string             `firestore:"owner"`
-	Funds             map[string]float64 `firestore:"funds"`
+	Balances          map[string]float64 `firestore:"balances"`
 	Reputation        int                `firestore:"reputation"`
 	CreationTimestamp time.Time          `firestore:"creationTimestamp"`
 }

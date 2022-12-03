@@ -12,7 +12,7 @@ type Renderer interface {
 
 func WriteResponse(w http.ResponseWriter, r *http.Request, code int, data any) {
 	var err error
-	respBody, err := json.Marshal(data)
+	respBody, err := json.MarshalIndent(data, "", "	")
 	if err != nil {
 		RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 		return

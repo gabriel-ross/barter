@@ -1,19 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 var PROJECT_ID = "personal-gabrielross"
 var PORT = ":8080"
 
 type Demo struct {
-	ID    string             `firestore:"id"`
-	Funds map[string]float64 `firestore:"funds"`
+	ID       string             `firestore:"id"`
+	Balances map[string]float64 `firestore:"balances"`
 }
 
 func main() {
-	foo := []int{1, 2, 3, 4, 5}
-	bar := foo[1:3]
-	fmt.Println(bar)
+	fmt.Println(time.Now())
 
 	// var err error
 	// ctx := context.TODO()
@@ -29,7 +30,7 @@ func main() {
 	// // One operation, key doesn't exist
 	// data1 := Demo{
 	// 	ID:    fsClient.Collection("demo").NewDoc().ID,
-	// 	Funds: map[string]float64{},
+	// 	Balances: map[string]float64{},
 	// }
 
 	// _, err = fsClient.Collection("demo").Doc(data1.ID).Set(ctx, data1)
@@ -37,7 +38,7 @@ func main() {
 	// 	log.Println("error storing data1 ", err)
 	// }
 	// _, err = fsClient.Collection("demo").Doc(data1.ID).Update(ctx, []firestore.Update{
-	// 	{Path: "funds.dollars", Value: firestore.Increment(10)},
+	// 	{Path: "balances.dollars", Value: firestore.Increment(10)},
 	// })
 	// if err != nil {
 	// 	log.Println("error incrementing data1 ", err)
@@ -59,7 +60,7 @@ func main() {
 	// // One operation, key does exist, testing if dot notation works with maps
 	// data2 := Demo{
 	// 	ID: fsClient.Collection("demo").NewDoc().ID,
-	// 	Funds: map[string]float64{
+	// 	Balances: map[string]float64{
 	// 		"dollars": 10,
 	// 	},
 	// }
@@ -68,7 +69,7 @@ func main() {
 	// 	log.Println("error storing data2 ", err)
 	// }
 	// _, err = fsClient.Collection("demo").Doc(data2.ID).Update(ctx, []firestore.Update{
-	// 	{Path: "funds.dollars", Value: firestore.Increment(10)},
+	// 	{Path: "balances.dollars", Value: firestore.Increment(10)},
 	// })
 	// if err != nil {
 	// 	log.Println("error incrementing data2 ", err)
@@ -90,7 +91,7 @@ func main() {
 	// // Two operations, testing unmarshaling into struct, updating, and storing
 	// data3 := Demo{
 	// 	ID: fsClient.Collection("demo").NewDoc().ID,
-	// 	Funds: map[string]float64{
+	// 	Balances: map[string]float64{
 	// 		"dollars": 100,
 	// 		"apples":  3,
 	// 	},
