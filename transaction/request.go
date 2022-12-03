@@ -13,7 +13,6 @@ type request struct {
 	Quantities         map[string]float64 `json:"quantities"`
 	SenderAccountID    string             `json:"sender"`
 	RecipientAccountID string             `json:"recipient"`
-	Timestamp          time.Time          `json:"timestamp"`
 }
 
 // BindRequest binds the fields defined in request of a request to a User.
@@ -30,6 +29,6 @@ func BindRequest(r *http.Request, m *model.Transaction) (err error) {
 	m.Quantities = reqBody.Quantities
 	m.SenderAccountID = reqBody.SenderAccountID
 	m.RecipientAccountID = reqBody.RecipientAccountID
-	m.Timestamp = reqBody.Timestamp
+	m.Timestamp = time.Now()
 	return nil
 }

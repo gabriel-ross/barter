@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +24,7 @@ var PORT string
 var CLIENT_ID string
 var CLIENT_SECRET string
 var TOKEN_REDIRECT_URL string
+var AUTH_URL string
 
 func main() {
 	var err error
@@ -44,11 +44,11 @@ func main() {
 		ClientSecret: CLIENT_SECRET,
 		Endpoint:     google.Endpoint,
 		Scopes:       []string{"openid"},
-		RedirectURL:  fmt.Sprintf("%s/auth/token", APPLICATION_URL),
+		RedirectURL:  TOKEN_REDIRECT_URL,
 	}
 
 	// Mount index page
-	r.Get("/", index())
+	r.Get("/", index(AUTH_URL))
 
 	supportedMIMETypes := map[string]struct{}{
 		"*/*":              struct{}{},
@@ -73,6 +73,7 @@ func LoadConfigFromEnvironment() {
 	CLIENT_ID = os.Getenv("CLIENT_ID")
 	CLIENT_SECRET = os.Getenv("CLIENT_SECRET")
 	TOKEN_REDIRECT_URL = os.Getenv("TOKEN_REDIRECT_URL")
+	AUTH_URL = os.Getenv("AUTH_URL")
 
 	// Default value if not set
 	if PORT == "" {
@@ -85,8 +86,9 @@ type Config struct {
 	PORT       string `env:"PORT" required:"false" default:"8080"`
 }
 
-func index() http.HandlerFunc {
+func index(authURL string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, authURL, http.StatusSeeOther)
 		barter.WriteResponse(w, r, http.StatusOK, "hello world")
 	}
 }
