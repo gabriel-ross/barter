@@ -13,7 +13,7 @@ type response struct {
 	ID                 string         `json:"id"`
 	Quantities         map[string]int `json:"quantities"`
 	SenderAccountID    string         `json:"sender"`
-	RecipientAccountID string         `json:"Recipient"`
+	RecipientAccountID string         `json:"recipient"`
 	Timestamp          time.Time      `json:"timestamp"`
 	Self               string         `json:"self"`
 }

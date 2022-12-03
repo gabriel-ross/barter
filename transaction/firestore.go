@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -27,19 +28,19 @@ func (svc *Service) create(ctx context.Context, data model.Transaction) (_ model
 				Path:  "balances." + key,
 				Value: firestore.Increment((-1) * val),
 			})
-			credits = append(payments, firestore.Update{
+			credits = append(credits, firestore.Update{
 				Path:  "balances." + key,
 				Value: firestore.Increment(val),
 			})
 		}
 		_, err = svc.db.Collection("accounts").Doc(data.SenderAccountID).Update(ctx, payments)
-		// if err != nil {
-		// 	return model.Transaction{}, err
-		// }
+		if err != nil {
+			log.Printf("create error debiting account %s: %v", data.SenderAccountID, err)
+		}
 		_, err = svc.db.Collection("accounts").Doc(data.RecipientAccountID).Update(ctx, credits)
-		// if err != nil {
-		// 	return model.Transaction{}, err
-		// }
+		if err != nil {
+			log.Printf("create error crediting account %s: %v", data.RecipientAccountID, err)
+		}
 	}
 
 	return data, nil
@@ -160,20 +161,19 @@ func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error
 				Path:  "balances." + key,
 				Value: firestore.Increment((-1) * val),
 			})
-			credits = append(payments, firestore.Update{
+			credits = append(credits, firestore.Update{
 				Path:  "balances." + key,
 				Value: firestore.Increment(val),
 			})
 		}
 		_, err = svc.db.Collection("accounts").Doc(data.SenderAccountID).Update(ctx, credits)
-		// if err != nil {
-		// 	return err
-		// }
-
+		if err != nil {
+			log.Printf("cascade delete error crediting account %s: %v", data.SenderAccountID, err)
+		}
 		_, err = svc.db.Collection("accounts").Doc(data.RecipientAccountID).Update(ctx, payments)
-		// if err != nil {
-		// 	return err
-		// }
+		if err != nil {
+			log.Printf("cascade delete error debiting account %s: %v", data.RecipientAccountID, err)
+		}
 	}
 
 	return nil
