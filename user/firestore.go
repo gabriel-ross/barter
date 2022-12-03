@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cloud.google.com/go/firestore"
+	"github.com/gabriel-ross/barter"
 	"github.com/gabriel-ross/barter/model"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
@@ -116,5 +117,34 @@ func (svc *Service) updateNonZero(ctx context.Context, id string, data model.Use
 
 func (svc *Service) delete(ctx context.Context, id string) (err error) {
 	_, err = svc.db.Collection("users").Doc(id).Delete(ctx)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error) {
+	_, err = svc.db.Collection("accounts").Doc(id).Delete(ctx)
+	if err != nil {
+		return err
+	}
+
+	query := svc.db.Collection("accounts").Query
+	query = barter.WithFilter("owner", barter.Eq, id)(query)
+	iter := query.Documents(ctx)
+	for {
+		dsnap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		dsnap.Ref.Update(ctx, []firestore.Update{
+			firestore.Update{
+				Path:  "owner",
+				Value: firestore.Delete,
+			},
+		})
+	}
+
+	return nil
 }

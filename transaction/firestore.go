@@ -139,7 +139,7 @@ func (svc *Service) delete(ctx context.Context, id string) (err error) {
 	return nil
 }
 
-func (svc *Service) cascadeDelete(ctx context.Context, id string) (err error) {
+func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error) {
 	data, err := svc.read(ctx, id)
 	if err != nil {
 		return err

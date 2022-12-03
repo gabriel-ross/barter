@@ -128,7 +128,7 @@ func (svc *Service) handleDelete() http.HandlerFunc {
 		var err error
 		id := chi.URLParam(r, "id")
 
-		err = svc.delete(ctx, id)
+		err = svc.deleteWithCascade(ctx, id)
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return

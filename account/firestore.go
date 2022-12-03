@@ -109,5 +109,51 @@ func (svc *Service) updateNonZero(ctx context.Context, id string, data model.Acc
 
 func (svc *Service) delete(ctx context.Context, id string) (err error) {
 	_, err = svc.db.Collection("accounts").Doc(id).Delete(ctx)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error) {
+	_, err = svc.db.Collection("accounts").Doc(id).Delete(ctx)
+	if err != nil {
+		return err
+	}
+
+	query := svc.db.Collection("transactions").Query
+	query = barter.WithFilter("sender", barter.Eq, id)(query)
+	iter := query.Documents(ctx)
+	for {
+		dsnap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		dsnap.Ref.Update(ctx, []firestore.Update{
+			firestore.Update{
+				Path:  "sender",
+				Value: firestore.Delete,
+			},
+		})
+	}
+
+	query = svc.db.Collection("transactions").Query
+	query = barter.WithFilter("recipient", barter.Eq, id)(query)
+	iter = query.Documents(ctx)
+	for {
+		dsnap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		dsnap.Ref.Update(ctx, []firestore.Update{
+			firestore.Update{
+				Path:  "recipient",
+				Value: firestore.Delete,
+			},
+		})
+	}
+
+	return nil
 }
