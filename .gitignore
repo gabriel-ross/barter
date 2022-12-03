@@ -23,5 +23,4 @@ key.json
 .DS_Store
 
 # Development notes
-*.md
 docs/
