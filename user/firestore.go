@@ -139,7 +139,7 @@ func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error
 		}
 
 		dsnap.Ref.Update(ctx, []firestore.Update{
-			firestore.Update{
+			{
 				Path:  "owner",
 				Value: firestore.Delete,
 			},

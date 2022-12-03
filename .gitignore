@@ -18,4 +18,10 @@
 Makefile
 *.env
 key.json
+
+# Mac generated files
 .DS_Store
+
+# Development notes
+*.md
+docs/
