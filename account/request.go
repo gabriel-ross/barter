@@ -9,9 +9,9 @@ import (
 )
 
 type request struct {
-	Owner      string             `json:"owner"`
-	Balances   map[string]float64 `json:"balances"`
-	Reputation int                `json:"reputation"`
+	Owner      string         `json:"owner"`
+	Balances   map[string]int `json:"balances"`
+	Reputation int            `json:"reputation"`
 }
 
 // BindRequest binds the fields defined in body of a request to an Account.

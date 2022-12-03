@@ -27,7 +27,7 @@ func (svc *Service) handleCreate() http.HandlerFunc {
 
 		data := model.Account{
 			Owner:      req.Owner,
-			Balances:   map[string]float64{},
+			Balances:   map[string]int{},
 			Reputation: 100,
 		}
 		resp, err := svc.create(ctx, data)

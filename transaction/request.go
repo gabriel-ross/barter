@@ -10,9 +10,9 @@ import (
 )
 
 type request struct {
-	Quantities         map[string]float64 `json:"quantities"`
-	SenderAccountID    string             `json:"sender"`
-	RecipientAccountID string             `json:"recipient"`
+	Quantities         map[string]int `json:"quantities"`
+	SenderAccountID    string         `json:"sender"`
+	RecipientAccountID string         `json:"recipient"`
 }
 
 // BindRequest binds the fields defined in request of a request to a User.

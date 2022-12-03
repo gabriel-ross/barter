@@ -10,12 +10,12 @@ import (
 )
 
 type response struct {
-	ID                string             `json:"id"`
-	Owner             string             `json:"owner"`
-	Balances          map[string]float64 `json:"balances"`
-	Reputation        int                `json:"reputation"`
-	CreationTimestamp time.Time          `json:"creationTimestamp"`
-	Self              string             `json:"self"`
+	ID                string         `json:"id"`
+	Owner             string         `json:"owner"`
+	Balances          map[string]int `json:"balances"`
+	Reputation        int            `json:"reputation"`
+	CreationTimestamp time.Time      `json:"creationTimestamp"`
+	Self              string         `json:"self"`
 }
 
 type listResponse struct {

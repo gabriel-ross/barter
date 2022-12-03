@@ -10,12 +10,12 @@ import (
 )
 
 type response struct {
-	ID                 string             `json:"id"`
-	Quantities         map[string]float64 `json:"quantities"`
-	SenderAccountID    string             `json:"sender"`
-	RecipientAccountID string             `json:"Recipient"`
-	Timestamp          time.Time          `json:"timestamp"`
-	Self               string             `json:"self"`
+	ID                 string         `json:"id"`
+	Quantities         map[string]int `json:"quantities"`
+	SenderAccountID    string         `json:"sender"`
+	RecipientAccountID string         `json:"Recipient"`
+	Timestamp          time.Time      `json:"timestamp"`
+	Self               string         `json:"self"`
 }
 
 type listResponse struct {
