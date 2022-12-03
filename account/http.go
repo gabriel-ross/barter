@@ -54,17 +54,20 @@ func (svc *Service) handleList() http.HandlerFunc {
 
 		requestor := r.Header.Get("Subject")
 		// resp, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc), barter.WithOffset(offset), barter.WithLimit(limit))
-		all, err := svc.list(ctx, barter.WithFilter("Owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc))
+		all, err := svc.list(ctx, barter.WithFilter("owner", barter.Eq, requestor), barter.WithOrder("id", firestore.Asc))
 		if err != nil {
 			barter.RenderError(w, r, http.StatusInternalServerError, err, "%s", err.Error())
 			return
 		}
-		var resp []model.Account
+
 		count := len(all)
-		if offset+limit >= count {
-			resp = all[offset:]
-		} else {
-			resp = all[offset : offset+limit]
+		resp := []model.Account{}
+		if count > 0 {
+			if offset+limit >= count {
+				resp = all[offset:]
+			} else {
+				resp = all[offset : offset+limit]
+			}
 		}
 
 		svc.RenderListResponse(w, r, http.StatusOK, resp, offset, limit, count)
