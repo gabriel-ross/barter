@@ -124,7 +124,7 @@ func (svc *Service) delete(ctx context.Context, id string) (err error) {
 }
 
 func (svc *Service) deleteWithCascade(ctx context.Context, id string) (err error) {
-	_, err = svc.db.Collection("accounts").Doc(id).Delete(ctx)
+	_, err = svc.db.Collection("users").Doc(id).Delete(ctx)
 	if err != nil {
 		return err
 	}
